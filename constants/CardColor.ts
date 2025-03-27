@@ -3,4 +3,5 @@ export const CardColor = {
     RED: 'red', 
     GREEN: 'green',
     BLUE: 'blue',
+    WILD: 'wild'
 };

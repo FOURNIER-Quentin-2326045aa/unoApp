@@ -3,6 +3,8 @@ import { View, Text, Button, StyleSheet, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
 import Card from './../../components/uno/Card';
 
+import { AllCards } from '@/constants/AllCards';
+
 export default function GameScreen() {
   const router = useRouter();
 
@@ -11,68 +13,7 @@ export default function GameScreen() {
   };
 
   // Constante, tableau de toutes les cartes d'un jeu de uno
-  const allCards = [
-    { color: 'red', value: '0', visible: false },
-    { color: 'red', value: '1', visible: false },
-    { color: 'red', value: '2', visible: false },
-    { color: 'red', value: '3', visible: false },
-    { color: 'red', value: '4', visible: false },
-    { color: 'red', value: '5', visible: false },
-    { color: 'red', value: '6', visible: false },
-    { color: 'red', value: '7', visible: false },
-    { color: 'red', value: '8', visible: false },
-    { color: 'red', value: '9', visible: false },
-    { color: 'red', value: 'skip', visible: false },
-    { color: 'red', value: 'reverse', visible: false },
-    { color: 'red', value: 'draw', visible: false },
-    { color: 'green', value: '0', visible: false },
-    { color: 'green', value: '1', visible: false },
-    { color: 'green', value: '2', visible: false },
-    { color: 'green', value: '3', visible: false },
-    { color: 'green', value: '4', visible: false },
-    { color: 'green', value: '5', visible: false },
-    { color: 'green', value: '6', visible: false },
-    { color: 'green', value: '7', visible: false },
-    { color: 'green', value: '8', visible: false },
-    { color: 'green', value: '9', visible: false },
-    { color: 'green', value: 'skip', visible: false },
-    { color: 'green', value: 'reverse', visible: false },
-    { color: 'green', value: 'draw', visible: false },
-    { color: 'blue', value: '0', visible: false },
-    { color: 'blue', value: '1', visible: false },
-    { color: 'blue', value: '2', visible: false },
-    { color: 'blue', value: '3', visible: false },
-    { color: 'blue', value: '4', visible: false },
-    { color: 'blue', value: '5', visible: false },
-    { color: 'blue', value: '6', visible: false },
-    { color: 'blue', value: '7', visible: false },
-    { color: 'blue', value: '8', visible: false },
-    { color: 'blue', value: '9', visible: false },
-    { color: 'blue', value: 'skip', visible: false },
-    { color: 'blue', value: 'reverse', visible: false },
-    { color: 'blue', value: 'draw', visible: false },
-    { color: 'yellow', value: '0', visible: false },
-    { color: 'yellow', value: '1', visible: false },
-    { color: 'yellow', value: '2', visible: false },
-    { color: 'yellow', value: '3', visible: false },
-    { color: 'yellow', value: '4', visible: false },
-    { color: 'yellow', value: '5', visible: false },
-    { color: 'yellow', value: '6', visible: false },
-    { color: 'yellow', value: '7', visible: false },
-    { color: 'yellow', value: '8', visible: false },
-    { color: 'yellow', value: '9', visible: false },
-    { color: 'yellow', value: 'skip', visible: false },
-    { color: 'yellow', value: 'reverse', visible: false },
-    { color: 'yellow', value: 'draw', visible: false },
-    { color: 'wild', value: '', visible: false },
-    { color: 'wild', value: '', visible: false },
-    { color: 'wild', value: '', visible: false },
-    { color: 'wild', value: '', visible: false },
-    { color: 'wild', value: 'draw', visible: false },
-    { color: 'wild', value: 'draw', visible: false },
-    { color: 'wild', value: 'draw', visible: false },
-    { color: 'wild', value: 'draw', visible: false },
-  ];
+  const allCards = AllCards();
 
   // On cree la pioche (mélange les cartes aléatoirement et fais une pile)
     const deck = allCards.sort(() => Math.random() - 0.5);
