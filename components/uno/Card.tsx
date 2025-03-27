@@ -1,6 +1,6 @@
 // Card.tsx
 import React from 'react';
-import { Image, StyleSheet, View } from 'react-native';
+import { Image, StyleSheet, View, TouchableOpacity } from 'react-native';
 
 // Définir l'interface des props pour le composant Carte
 interface CardProps {
@@ -98,9 +98,15 @@ const Card: React.FC<CardProps> = ({ color, value, visible }) => {
     return null; // Si l'image n'existe pas, on ne rend rien
   }
 
+  const handleCardPress = () => {
+    alert(`Carte cliquée: ${cardKey}`);
+  }
+
   return (
     <View>
-      <Image source={image} style={styles.cardImage} />
+      <TouchableOpacity onPress={handleCardPress}>
+        <Image source={image} style={styles.cardImage} />
+      </TouchableOpacity>
     </View>
   );
 };

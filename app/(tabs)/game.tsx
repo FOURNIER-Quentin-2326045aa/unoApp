@@ -75,24 +75,25 @@ export default function GameScreen() {
   ];
 
   // On cree la pioche (mélange les cartes aléatoirement et fais une pile)
-    const deck = allCards.sort(() => Math.random() - 0.5);
+    let deck = allCards.sort(() => Math.random() - 0.5);
 
     // On distribue les cartes aux joueurs
     const playerHand = deck.slice(0, 7).map((card) => ({ ...card, visible: true }));
     const botHand = deck.slice(7, 14).map((card) => ({ ...card, visible: false }));
     // On enleve les cartes distribuées de la pioche
-    const newDeck = deck.slice(14);
+    deck = deck.slice(14);
 
     // on prend la premiere carte de la pile pour la poser sur la table
-    const table = newDeck[0];
+    const table = deck[0];
     table.visible = true;
     // on enleve la carte de la pile
-    newDeck.shift();
+    deck.shift();
 
     // affichage des cartes dans la console pour vérifier
     console.log(playerHand);
     console.log(botHand);
-    console.log(newDeck);
+    console.log(deck);
+    console.log(table);
 
   return (
     <View style={styles.container}>
@@ -105,7 +106,10 @@ export default function GameScreen() {
         </ScrollView>
 
         <View style={styles.hr} />
+        <View style={styles.piocheEtTable}>
+        <Card color={deck[0].color} value={deck[0].value} visible={false} />
         <Card color={table.color} value={table.value} visible={table.visible} />
+        </View>
         <View style={styles.hr} />
 
         <Text style={styles.text}>Main du joueur</Text>
@@ -153,5 +157,9 @@ const styles = StyleSheet.create({
     position: 'absolute', // Position absolue pour le footer
     bottom: 0, // En bas de l'écran
     width: '100%', // Prend toute la largeur    
+  },
+  piocheEtTable: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
   },
 });
