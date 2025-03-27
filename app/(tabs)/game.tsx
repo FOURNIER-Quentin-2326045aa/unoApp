@@ -112,7 +112,7 @@ export default function GameScreen() {
         </View>
         <View style={styles.hr} />
 
-        <Text style={styles.text}>Main du joueur</Text>
+        <Text style={styles.text}>Votre main</Text>
         <ScrollView horizontal style={styles.cardContainer}>
           {playerHand.map((card, index) => (
             <Card key={index} color={card.color} value={card.value} visible={card.visible} />
