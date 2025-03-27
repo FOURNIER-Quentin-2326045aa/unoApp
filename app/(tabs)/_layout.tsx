@@ -3,7 +3,7 @@ import React from 'react';
 
 export default function RootLayout() {
   return (
-    <Stack screenOptions={{ headerShown: false }}>
+    <Stack screenOptions={{ headerShown: false, animation: 'fade' }}>
       {/* Onglets */}
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       {/* Écran du jeu Uno, sans la tab bar */}
