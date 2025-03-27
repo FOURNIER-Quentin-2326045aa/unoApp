@@ -7,7 +7,7 @@ export default function GameScreen() {
   return (
     <View style={styles.container}>
       <Text style={styles.text}>Page de jeu - a modifier</Text>
-      <Button title="Retour" onPress={() => router.back()} />
+      <Button color="red" title="Abandonner" onPress={() => router.back()} />
     </View>
   );
 }
