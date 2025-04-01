@@ -140,18 +140,21 @@ export const GameProvider: React.FC = ({ children }) => {
         setTurn(turn === 'player1' ? 'player2' : 'player1');
 
     };
-    const onDraw2 = (other) => {
+
+    const onDraw2 = (other: 'player1' | 'player2') => {
         if (drawCardPile.length < 2) return; // Vérifier qu'il y a au moins 2 cartes à piocher
 
+        // On prend les 2 premières cartes et on les rend visibles
         const drawnCards = drawCardPile.slice(0, 2).map(card => ({ ...card, visible: true }));
 
+        // Ajouter les cartes piochées au deck du joueur concerné
         if (other === 'player1') {
             setPlayer1Deck((prev) => [...prev, ...drawnCards]);
         } else {
             setPlayer2Deck((prev) => [...prev, ...drawnCards]);
         }
 
-        // Mettre à jour la pioche
+        // Mettre à jour la pioche en enlevant les cartes piochées
         setDrawCardPile((prev) => prev.slice(2));
     };
 
@@ -172,21 +175,65 @@ export const GameProvider: React.FC = ({ children }) => {
     };
 
     useEffect(() => {
-        if (turn === 'player2') {
-            setTimeout(() => {
-                const playableCards = player2Deck.filter(card =>
-                    card.color === currentColor || card.value === currentNumber || card.color === "WILD"
-                );
-
-                if (playableCards.length > 0) {
-                    const randomCard = playableCards[Math.floor(Math.random() * playableCards.length)];
-                    onPlayCard(randomCard);
-                } else {
-                    onDrawCard();
-                }
-            }, 1000); // Attendre 1 seconde pour simuler un temps de réflexion
+        if (turn === "player2") {
+            const botPlay = () => {
+                let keepPlaying = true; // Permet au bot de rejouer s'il le doit
+    
+                const playTurn = () => {
+                    let playableCards = player2Deck.filter(
+                        (card) =>
+                            card.color === currentColor ||
+                            card.value === currentNumber ||
+                            card.color === "WILD"
+                    );
+    
+                    if (playableCards.length > 0) {
+                        const chosenCard = playableCards[Math.floor(Math.random() * playableCards.length)];
+                        onPlayCard(chosenCard);
+    
+                        // Gestion des cartes spéciales
+                        if (chosenCard.value === "skip" || chosenCard.value === "reverse") {
+                            keepPlaying = true; // Le bot rejoue
+                            setTimeout(playTurn, 1000); // Relance le tour après une pause
+                        } else if (chosenCard.value === "draw") {
+                            onDraw2("player1"); // Le joueur adverse pioche
+                            keepPlaying = true; // Le bot rejoue
+                            setTimeout(playTurn, 1000); // Relance le tour après une pause
+                        } else {
+                            keepPlaying = false; // Tour terminé, passage au joueur
+                            setTimeout(() => setTurn("player1"), 500);
+                        }
+                    } else {
+                        // Le bot pioche une carte et essaie de jouer
+                        onDrawCard();
+                        setTimeout(() => {
+                            playableCards = player2Deck.filter(
+                                (card) =>
+                                    card.color === currentColor ||
+                                    card.value === currentNumber ||
+                                    card.color === "WILD"
+                            );
+    
+                            if (playableCards.length > 0) {
+                                const chosenCard = playableCards[Math.floor(Math.random() * playableCards.length)];
+                                onPlayCard(chosenCard);
+                                keepPlaying = false; // Une seule carte après pioche
+                                setTimeout(() => setTurn("player1"), 500); // Passe le tour après avoir joué
+                            } else {
+                                setTimeout(() => setTurn("player1"), 500);
+                            }
+                        }, 1000);
+                        keepPlaying = false; // Après la pioche, on arrête de rejouer
+                    }
+                };
+    
+                setTimeout(playTurn, 1000); // Commence le jeu avec un délai initial
+            };
+    
+            botPlay(); // Appelle la fonction pour jouer le tour du bot
         }
     }, [turn]);
+    
 
     return (
         <GameContext.Provider
