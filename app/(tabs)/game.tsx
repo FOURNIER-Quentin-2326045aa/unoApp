@@ -30,7 +30,7 @@ export default function GameScreen() {
                   key={index}
                   color={card.color}
                   value={card.value}
-                  visible={card.visible}
+                  visible={false} // Les cartes du bot ne sont pas visibles
                   disabled={turn === 'player1'} // Désactiver les cartes du bot si c'est le tour du joueur
               />
           ))}
