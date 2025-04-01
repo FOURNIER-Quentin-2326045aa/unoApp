@@ -16,6 +16,7 @@ interface GameContextType {
     currentNumber: string;
     turn: 'player1' | 'player2';
     isUnoButtonPressed: boolean;
+    showUnoLogo: boolean;
     initializeGame: () => void;
     onPlayCard: (card: Card) => void;
     onDrawCard: () => void;
@@ -34,6 +35,8 @@ export const GameProvider: React.FC = ({ children }) => {
     const [currentNumber, setCurrentNumber] = useState('');
     const [turn, setTurn] = useState<'player1' | 'player2'>('player1');
     const [isUnoButtonPressed, setUnoButtonPressed] = useState(false);
+    const [showUnoLogo, setShowUnoLogo] = useState(false);
+
 
     useEffect(() => {
         initializeGame();
@@ -118,7 +121,14 @@ export const GameProvider: React.FC = ({ children }) => {
 
     const onUno = () => {
         setUnoButtonPressed(true);
+        setShowUnoLogo(true);
+    
+        setTimeout(() => {
+            setShowUnoLogo(false);
+            setUnoButtonPressed(false);
+        }, 3000);
     };
+    
 
     const handleAbandonGame = () => {
         // Logique pour abandonner le jeu (peut-être rediriger vers un autre écran)
@@ -153,6 +163,7 @@ export const GameProvider: React.FC = ({ children }) => {
                 currentNumber,
                 turn,
                 isUnoButtonPressed,
+                showUnoLogo,
                 initializeGame,
                 onPlayCard,
                 onDrawCard,
