@@ -2,73 +2,78 @@ import React from 'react';
 import { View, Text, Button, StyleSheet, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
 import Card from './../../components/uno/Card';
-
-import { AllCards } from '@/constants/AllCards';
+import { useGameContext } from '@/context/GameContext';
 
 export default function GameScreen() {
   const router = useRouter();
-
-  const handleAbandonGame = () => {
-    router.replace('/');
-  };
-
-  // Constante, tableau de toutes les cartes d'un jeu de uno
-  const allCards = AllCards();
-
-  // On cree la pioche (mélange les cartes aléatoirement et fais une pile)
-    let deck = allCards.sort(() => Math.random() - 0.5);
-
-    // On distribue les cartes aux joueurs
-    const playerHand = deck.slice(0, 7).map((card) => ({ ...card, visible: true }));
-    const botHand = deck.slice(7, 14).map((card) => ({ ...card, visible: false }));
-    // On enleve les cartes distribuées de la pioche
-    deck = deck.slice(14);
-
-    // on prend la premiere carte de la pile pour la poser sur la table
-    const table = deck[0];
-    table.visible = true;
-    // on enleve la carte de la pile
-    deck.shift();
-
-    // affichage des cartes dans la console pour vérifier
-    console.log(playerHand);
-    console.log(botHand);
-    console.log(deck);
-    console.log(table);
+  const {
+    player1Deck,
+    player2Deck,
+    playedCardsPile,
+    drawCardPile,
+    currentColor,
+    currentNumber,
+    turn,
+    isUnoButtonPressed,
+    onPlayCard,
+    onDrawCard,
+    onUno,
+    handleAbandonGame,
+  } = useGameContext();
 
   return (
-    <View style={styles.container}>
-
+      <View style={styles.container}>
         <Text style={styles.text}>Main du bot</Text>
         <ScrollView horizontal style={styles.cardContainer}>
-          {botHand.map((card, index) => (
-            <Card key={index} color={card.color} value={card.value} visible={card.visible} />
+          {player2Deck.map((card, index) => (
+              <Card
+                  key={index}
+                  color={card.color}
+                  value={card.value}
+                  visible={card.visible}
+                  disabled={turn === 'player1'} // Désactiver les cartes du bot si c'est le tour du joueur
+              />
           ))}
         </ScrollView>
 
         <View style={styles.hr} />
         <View style={styles.piocheEtTable}>
-        <Card color={deck[0].color} value={deck[0].value} visible={false} />
-        <Card color={table.color} value={table.value} visible={table.visible} />
+          <Card
+              color={drawCardPile[0]?.color || 'defaultColor'}
+              value={drawCardPile[0]?.value || 'defaultValue'}
+              visible={false}
+              disabled={true} // La pioche n'est jamais cliquable
+          />
+
+          <Card
+              color={currentColor}
+              value={currentNumber}
+              visible={true}
+              disabled={true} // La carte sur la table n'est jamais cliquable
+          />
         </View>
         <View style={styles.hr} />
 
         <Text style={styles.text}>Votre main</Text>
         <ScrollView horizontal style={styles.cardContainer}>
-          {playerHand.map((card, index) => (
-            <Card key={index} color={card.color} value={card.value} visible={card.visible} />
+          {player1Deck.map((card, index) => (
+              <Card
+                  key={index}
+                  color={card.color}
+                  value={card.value}
+                  visible={card.visible}
+                  disabled={turn === 'player2'} // Désactiver les cartes du joueur si c'est le tour du bot
+              />
           ))}
         </ScrollView>
 
-    <View style={styles.endGame}>
-
-      <View style={styles.hr} />
-
-      <Button color="red" title="Abandonner" onPress={handleAbandonGame} />
-    </View>
-
-    </View>
-
+        <View style={styles.endGame}>
+          <View style={styles.hr} />
+          <Button color="red" title="Abandonner" onPress={handleAbandonGame} />
+          <Button color="blue" title="Tirer une carte" onPress={onDrawCard} />
+          <Button color="green" title="UNO" onPress={onUno} />
+        </View>
+      </View>
   );
 }
 
@@ -81,23 +86,22 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold',
     color: 'white',
-    marginBottom: 20, // Espacement entre le texte et les cartes
+    marginBottom: 20,
   },
   hr: {
-    width: '100%', // Largeur de la ligne
-    height: 1,    // Épaisseur de la ligne
-    backgroundColor: 'white', // Couleur de la ligne
-    marginVertical: 20, // Espace autour de la ligne
+    width: '100%',
+    height: 1,
+    backgroundColor: 'white',
+    marginVertical: 20,
   },
   cardContainer: {
     flexDirection: 'row',
-    maxHeight: 120, // Hauteur maximale de la ScrollView
-    bottom: 0, // Aligner les cartes en bas
+    maxHeight: 120,
   },
   endGame: {
-    position: 'absolute', // Position absolue pour le footer
-    bottom: 0, // En bas de l'écran
-    width: '100%', // Prend toute la largeur    
+    position: 'absolute',
+    bottom: 0,
+    width: '100%',
   },
   piocheEtTable: {
     flexDirection: 'row',

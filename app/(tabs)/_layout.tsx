@@ -1,19 +1,19 @@
 import { Stack } from 'expo-router';
-import React from 'react';
+import { GameProvider } from '@/context/GameContext';
 
 export default function RootLayout() {
-  return (
-    <Stack screenOptions={{ headerShown: false, animation: 'fade' }}>
-      {/* Onglets */}
-      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-      {/* Écran du jeu Uno, sans la tab bar */}
-      <Stack.Screen
-        name="game"
-        options={{
-          presentation: 'modal', // Ouvre le jeu comme une modale
-          headerShown: false, // Cache aussi le header
-        }}
-      />
-    </Stack>
-  );
+    return (
+        <GameProvider>
+            <Stack screenOptions={{ headerShown: false, animation: 'fade' }}>
+                <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+                <Stack.Screen
+                    name="game"
+                    options={{
+                        presentation: 'modal',
+                        headerShown: false,
+                    }}
+                />
+            </Stack>
+        </GameProvider>
+    );
 }

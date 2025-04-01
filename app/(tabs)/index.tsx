@@ -6,7 +6,7 @@ export default function HomeScreen() {
 
   return (
     <View style={styles.container}>
-      <Button title="Jouer au Uno" onPress={() => router.push('/game')} />
+      <Button title="Jouer au Uno" onPress={() => router.push('/App')} />
     </View>
   );
 }

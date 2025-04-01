@@ -1,14 +1,15 @@
-// Card.tsx
 import React from 'react';
 import { Image, StyleSheet, View, TouchableOpacity } from 'react-native';
+import { useGameContext } from '@/context/GameContext';
 
 // Définir l'interface des props pour le composant Carte
 interface CardProps {
   color: string;
-  // 0 a 9, draw, reverse, skip
   value: string;
   visible: boolean;
+  disabled: boolean;
 }
+
 
 // Créer un objet pour mapper chaque carte à son image
 const cardImages: { [key: string]: any } = {
@@ -27,7 +28,7 @@ const cardImages: { [key: string]: any } = {
   'Red-skip': require('@/assets/images/unoPack/Red_Skip.png'),
   'Red-reverse': require('@/assets/images/unoPack/Red_Reverse.png'),
   'Red-draw': require('@/assets/images/unoPack/Red_Draw.png'),
-  
+
   // Cartes vertes
   'Green-0': require('@/assets/images/unoPack/Green_0.png'),
   'Green-1': require('@/assets/images/unoPack/Green_1.png'),
@@ -83,7 +84,9 @@ const cardImages: { [key: string]: any } = {
   'back': require('@/assets/images/unoPack/Deck.png'),
 };
 
-const Card: React.FC<CardProps> = ({ color, value, visible }) => {
+const Card: React.FC<CardProps> = ({ color, value, visible, disabled }) => {
+  const { onPlayCard } = useGameContext();
+
   // Créer une clé unique pour chaque carte
   const cardKey = `${color.charAt(0).toUpperCase() + color.slice(1)}-${value}`; // La première lettre de color devient une majuscule
 
@@ -99,19 +102,20 @@ const Card: React.FC<CardProps> = ({ color, value, visible }) => {
   }
 
   const handleCardPress = () => {
-    alert(`Carte cliquée: ${cardKey}`);
+    if (!disabled) {
+      onPlayCard({ color, value, visible });
+    }
   }
 
   return (
-    <View>
-      <TouchableOpacity onPress={handleCardPress}>
-        <Image source={image} style={styles.cardImage} />
-      </TouchableOpacity>
-    </View>
+      <View>
+        <TouchableOpacity onPress={handleCardPress} disabled={disabled}>
+          <Image source={image} style={styles.cardImage} />
+        </TouchableOpacity>
+      </View>
   );
 };
 
-// Styles
 const styles = StyleSheet.create({
   cardImage: {
     width: 80,
