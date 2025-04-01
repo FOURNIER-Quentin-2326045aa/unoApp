@@ -110,6 +110,10 @@ export const GameProvider: React.FC = ({ children }) => {
 
         // Mettre à jour la pioche
         setDrawCardPile((prev) => prev.slice(1));
+
+        // Passer au joueur suivant
+        setTurn(turn === 'player1' ? 'player2' : 'player1');
+        console.log('Card drawn:', drawnCard);
     };
 
     const onUno = () => {
@@ -120,6 +124,23 @@ export const GameProvider: React.FC = ({ children }) => {
         // Logique pour abandonner le jeu (peut-être rediriger vers un autre écran)
         console.log('Game Abandoned');
     };
+
+    useEffect(() => {
+        if (turn === 'player2') {
+            setTimeout(() => {
+                const playableCards = player2Deck.filter(card => 
+                    card.color === currentColor || card.value === currentNumber
+                );
+    
+                if (playableCards.length > 0) {
+                    const randomCard = playableCards[Math.floor(Math.random() * playableCards.length)];
+                    onPlayCard(randomCard);
+                } else {
+                    onDrawCard();
+                }
+            }, 1000); // Attendre 1 seconde pour simuler un temps de réflexion
+        }
+    }, [turn]);    
 
     return (
         <GameContext.Provider
