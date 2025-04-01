@@ -50,8 +50,17 @@ export const GameProvider: React.FC = ({ children }) => {
         const player2Hand = deck.slice(7, 14).map((card) => ({ ...card, visible: false }));
         deck = deck.slice(14);
 
-        // On pose la première carte sur la table
-        const tableCard = deck[0];
+        // si la premiere carte de la pioche est une carte spéciale, on la remet dans le deck
+        // Sinon, on la met sur la table
+        let tableCard = deck[0];
+        // Tant que la carte n'est pas un numéro, on la remet dans le deck
+        while (!/^[0-9]$/.test(tableCard.value)) {
+            // On enlève la carte du deck et on la remet a la fin du deck
+            deck.shift();
+            // On remet la carte dans le deck
+            deck.push(tableCard);
+            tableCard = deck[0];
+        }
 
         tableCard.visible = true;
         deck.shift();
