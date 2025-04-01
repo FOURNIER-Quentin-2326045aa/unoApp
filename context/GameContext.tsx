@@ -128,7 +128,17 @@ export const GameProvider: React.FC = ({ children }) => {
 
         // Mettre à jour la pioche
         setDrawCardPile((prev) => prev.slice(1));
-        onPlayCard(drawnCard);
+        
+        // Si on peut jouer la carte piochée, on la joue automatiquement après 1 seconde
+        if (drawnCard.color === currentColor || drawnCard.value === currentNumber || drawnCard.color === "WILD") {
+            setTimeout(() => {
+                onPlayCard(drawnCard);
+            }
+            , 500); // Délai de 1 seconde avant de jouer la carte piochée
+        }
+        // Passer au joueur suivant
+        setTurn(turn === 'player1' ? 'player2' : 'player1');
+
     };
     const onDraw2 = (other) => {
         if (drawCardPile.length < 2) return; // Vérifier qu'il y a au moins 2 cartes à piocher
