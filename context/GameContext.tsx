@@ -66,8 +66,47 @@ export const GameProvider: React.FC = ({ children }) => {
     };
 
     const onPlayCard = (card: Card) => {
+        
         // Vérifier si la carte peut être jouée (même couleur ou même nombre)
         if (card.color === currentColor || card.value === currentNumber) {
+            //Si un +2 valide
+            if(card.color === currentColor && card.value === "draw" ){
+
+                // Enlever la carte du deck du joueur
+                if (turn === 'player1') {
+                    setPlayer1Deck((prev) => prev.filter((item) => item.color !== card.color || item.value !== card.value));
+                    onDraw2('player2')
+                } else {
+                    setPlayer2Deck((prev) => prev.filter((item) => item.color !== card.color || item.value !== card.value));
+                    onDraw2('player1')
+                }
+                setTurn(turn === 'player1' ? 'player1' : 'player2');
+
+            }
+
+            //Si c'est Skip ou Reverse
+            else if(card.color === currentColor && (card.value === "skip" || card.value ==="reverse")){
+                // Enlever la carte du deck du joueur
+                if (turn === 'player1') {
+                    setPlayer1Deck((prev) => prev.filter((item) => item.color !== card.color || item.value !== card.value));
+                } else {
+                    setPlayer2Deck((prev) => prev.filter((item) => item.color !== card.color || item.value !== card.value));
+                }
+                setTurn(turn === 'player1' ? 'player1' : 'player2');
+            }
+
+            else {
+                // Enlever la carte du deck du joueur
+                if (turn === 'player1') {
+                    setPlayer1Deck((prev) => prev.filter((item) => item.color !== card.color || item.value !== card.value));
+                } else {
+                    setPlayer2Deck((prev) => prev.filter((item) => item.color !== card.color || item.value !== card.value));
+                }
+
+                // Passer au joueur suivant
+                setTurn(turn === 'player1' ? 'player2' : 'player1');
+            }
+
             // Ajouter la carte à la pile de cartes jouées
             setPlayedCardsPile((prev) => [...prev, card]);
 
@@ -75,16 +114,9 @@ export const GameProvider: React.FC = ({ children }) => {
             setCurrentColor(card.color);
             setCurrentNumber(card.value);
 
-            // Enlever la carte du deck du joueur
-            if (turn === 'player1') {
-                setPlayer1Deck((prev) => prev.filter((item) => item.color !== card.color || item.value !== card.value));
-            } else {
-                setPlayer2Deck((prev) => prev.filter((item) => item.color !== card.color || item.value !== card.value));
-            }
-
-            // Passer au joueur suivant
-            setTurn(turn === 'player1' ? 'player2' : 'player1');
         }
+
+
     };
 
     const onDrawCard = () => {
@@ -101,6 +133,21 @@ export const GameProvider: React.FC = ({ children }) => {
 
         // Mettre à jour la pioche
         setDrawCardPile((prev) => prev.slice(1));
+        onPlayCard(drawnCard);
+    };
+    const onDraw2 = (other) => {
+        if (drawCardPile.length < 2) return; // Vérifier qu'il y a au moins 2 cartes à piocher
+
+        const drawnCards = drawCardPile.slice(0, 2).map(card => ({ ...card, visible: true }));
+
+        if (other === 'player1') {
+            setPlayer1Deck((prev) => [...prev, ...drawnCards]);
+        } else {
+            setPlayer2Deck((prev) => [...prev, ...drawnCards]);
+        }
+
+        // Mettre à jour la pioche
+        setDrawCardPile((prev) => prev.slice(2));
     };
 
     const onUno = () => {
