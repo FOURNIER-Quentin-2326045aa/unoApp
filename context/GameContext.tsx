@@ -66,7 +66,7 @@ export const GameProvider: React.FC = ({ children }) => {
     };
 
     const onPlayCard = (card: Card) => {
-        
+
         // Vérifier si la carte peut être jouée (même couleur ou même nombre)
         if (card.color === currentColor || card.value === currentNumber) {
             //Si un +2 valide
