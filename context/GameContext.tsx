@@ -78,14 +78,16 @@ export const GameProvider: React.FC = ({ children }) => {
     };
 
     const onPlayCard = (card: Card) => {
-        // Vérifier si la carte peut être jouée (même couleur ou même nombre)
-        if (card.color === currentColor || card.value === currentNumber) {
-            // Ajouter la carte à la pile de cartes jouées
+        // Vérifier si la carte peut être jouée
+        if (card.color === currentColor || card.value === currentNumber || card.color === "WILD") {
+
+            // Mettre à jour la pile de cartes jouées
             setPlayedCardsPile((prev) => [...prev, card]);
 
-            // Mettre à jour la carte actuelle
+            // Mettre à jour la couleur et le nombre actuels
             setCurrentColor(card.color);
             setCurrentNumber(card.value);
+
 
             // Enlever la carte du deck du joueur
             if (turn === 'player1') {
@@ -94,8 +96,21 @@ export const GameProvider: React.FC = ({ children }) => {
                 setPlayer2Deck((prev) => prev.filter((item) => item.color !== card.color || item.value !== card.value));
             }
 
-            // Passer au joueur suivant
-            setTurn(turn === 'player1' ? 'player2' : 'player1');
+            // Gestion des cartes spéciales
+            if (card.value === "draw") {
+                // +2 : L'autre joueur pioche et le tour ne change pas
+                const nextPlayer = turn === 'player1' ? 'player2' : 'player1';
+                onDraw2(nextPlayer);
+            } else if (card.value === "skip") {
+                // Skip : Le joueur garde son tour pour enchaîner un autre coup
+                setTurn(turn);
+            } else if (card.value === "reverse") {
+                // Reverse dans un jeu à 2 joueurs agit comme un Skip
+                setTurn(turn);
+            } else {
+                // Sinon, passer au joueur suivant
+                setTurn(turn === 'player1' ? 'player2' : 'player1');
+            }
         }
     };
 
@@ -113,10 +128,21 @@ export const GameProvider: React.FC = ({ children }) => {
 
         // Mettre à jour la pioche
         setDrawCardPile((prev) => prev.slice(1));
+        onPlayCard(drawnCard);
+    };
+    const onDraw2 = (other) => {
+        if (drawCardPile.length < 2) return; // Vérifier qu'il y a au moins 2 cartes à piocher
 
-        // Passer au joueur suivant
-        setTurn(turn === 'player1' ? 'player2' : 'player1');
-        console.log('Card drawn:', drawnCard);
+        const drawnCards = drawCardPile.slice(0, 2).map(card => ({ ...card, visible: true }));
+
+        if (other === 'player1') {
+            setPlayer1Deck((prev) => [...prev, ...drawnCards]);
+        } else {
+            setPlayer2Deck((prev) => [...prev, ...drawnCards]);
+        }
+
+        // Mettre à jour la pioche
+        setDrawCardPile((prev) => prev.slice(2));
     };
 
     const onUno = () => {
@@ -138,10 +164,10 @@ export const GameProvider: React.FC = ({ children }) => {
     useEffect(() => {
         if (turn === 'player2') {
             setTimeout(() => {
-                const playableCards = player2Deck.filter(card => 
-                    card.color === currentColor || card.value === currentNumber
+                const playableCards = player2Deck.filter(card =>
+                    card.color === currentColor || card.value === currentNumber || card.color === "WILD"
                 );
-    
+
                 if (playableCards.length > 0) {
                     const randomCard = playableCards[Math.floor(Math.random() * playableCards.length)];
                     onPlayCard(randomCard);
@@ -150,7 +176,7 @@ export const GameProvider: React.FC = ({ children }) => {
                 }
             }, 1000); // Attendre 1 seconde pour simuler un temps de réflexion
         }
-    }, [turn]);    
+    }, [turn]);
 
     return (
         <GameContext.Provider
