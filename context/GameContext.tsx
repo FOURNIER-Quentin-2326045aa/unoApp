@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { AllCards } from '@/constants/AllCards';
+import {router, useRouter} from "expo-router";
 
 interface Card {
     color: string;
@@ -125,8 +126,19 @@ export const GameProvider: React.FC = ({ children }) => {
 
         // Mettre à jour la pioche
         setDrawCardPile((prev) => prev.slice(1));
-        onPlayCard(drawnCard);
+
+        // Vérifier si la carte piochée est jouable
+        if (drawnCard.color === currentColor || drawnCard.value === currentNumber || drawnCard.color === "WILD") {
+            setTimeout(() => {
+                onPlayCard(drawnCard); // Joue la carte immédiatement
+                setTurn(turn === 'player1' ? 'player2' : 'player1'); // Change de tour après avoir joué
+            }, 500); // Petit délai pour simuler le temps de réaction
+        } else {
+            // Si elle n'est pas jouable, on change de tour immédiatement
+            setTurn(turn === 'player1' ? 'player2' : 'player1');
+        }
     };
+
     const onDraw2 = (other) => {
         if (drawCardPile.length < 2) return; // Vérifier qu'il y a au moins 2 cartes à piocher
 
@@ -146,11 +158,11 @@ export const GameProvider: React.FC = ({ children }) => {
         setUnoButtonPressed(true);
     };
 
-    const handleAbandonGame = () => {
-        // Logique pour abandonner le jeu (peut-être rediriger vers un autre écran)
-        console.log('Game Abandoned');
-    };
+    const router = useRouter();
 
+    const handleAbandonGame = () => {
+        router.replace('/'); // Redirige vers la page d'accueil
+    };
     useEffect(() => {
         if (turn === 'player2') {
             setTimeout(() => {
