@@ -1,6 +1,7 @@
-import React from 'react';
-import {View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert} from 'react-native';
-import { FontAwesome5 } from '@expo/vector-icons';
+import React, { useEffect, useRef } from 'react';
+import { View, Text, Button, StyleSheet, ScrollView, Image, Animated } from 'react-native';
+import { useRouter } from 'expo-router';
+import Card from './../../components/uno/Card';
 import { useGameContext } from '@/context/GameContext';
 import Card from './../../components/uno/Card';
 import { Modal } from 'react-native';
@@ -17,6 +18,8 @@ export default function GameScreen() {
     currentColor,
     currentNumber,
     turn,
+    isUnoButtonPressed,
+    showUnoLogo,
     onPlayCard,
     onDrawCard,
     onUno,
@@ -33,6 +36,29 @@ export default function GameScreen() {
   };
 
 
+
+  // Animation pour le logo UNO
+  const scale = useRef(new Animated.Value(1)).current;
+
+  // Animation pour le logo UNO (oui je sais c'est moche)
+  useEffect(() => {
+    if (showUnoLogo) {
+      Animated.sequence([
+        Animated.timing(scale, {
+          toValue: 2, // Agrandir
+          duration: 1000, // Durée de l'agrandissement
+          useNativeDriver: true,
+        }),
+        Animated.timing(scale, {
+          toValue: 0, // Rétrécir jusqu'à disparaître
+          duration: 1000, // Durée du rétrécissement
+          useNativeDriver: true,
+        }),
+      ]).start();
+    } else {
+      scale.setValue(1);
+    }
+  }, [showUnoLogo, scale]);
 
   return (
       <View style={styles.container}>
@@ -81,7 +107,15 @@ export default function GameScreen() {
             <Text style={styles.buttonText}>UNO</Text>
           </TouchableOpacity>
         </View>
-
+          {/* Affichage de l'image du logo UNO si le bouton est pressé */}
+          {showUnoLogo && (
+              <View style={styles.unoLogoContainer}>
+                  <Animated.Image
+                      source={require('@/assets/images/unoLogo.png')}
+                      style={[styles.unoLogo, { transform: [{ scale }] }]}
+                      resizeMode="contain"
+                  />
+              </View> )}
         <Modal
             animationType="slide"
             transparent={true}
@@ -210,4 +244,18 @@ const styles = StyleSheet.create({
   },
 
 
+  unoLogoContainer: {
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    left: 0,
+    right: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 10,
+  },
+  unoLogo: {
+    width: 500,
+    height: 500,
+  },
 });

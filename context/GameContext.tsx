@@ -17,6 +17,7 @@ interface GameContextType {
     currentNumber: string;
     turn: 'player1' | 'player2';
     isUnoButtonPressed: boolean;
+    showUnoLogo: boolean;
     initializeGame: () => void;
     onPlayCard: (card: Card) => void;
     onDrawCard: () => void;
@@ -35,6 +36,8 @@ export const GameProvider: React.FC = ({ children }) => {
     const [currentNumber, setCurrentNumber] = useState('');
     const [turn, setTurn] = useState<'player1' | 'player2'>('player1');
     const [isUnoButtonPressed, setUnoButtonPressed] = useState(false);
+    const [showUnoLogo, setShowUnoLogo] = useState(false);
+
 
     useEffect(() => {
         initializeGame();
@@ -127,18 +130,17 @@ export const GameProvider: React.FC = ({ children }) => {
         // Mettre à jour la pioche
         setDrawCardPile((prev) => prev.slice(1));
 
-        // Vérifier si la carte piochée est jouable
+        // Si on peut jouer la carte piochée, on la joue automatiquement après 1 seconde
         if (drawnCard.color === currentColor || drawnCard.value === currentNumber || drawnCard.color === "WILD") {
             setTimeout(() => {
-                onPlayCard(drawnCard); // Joue la carte immédiatement
-                setTurn(turn === 'player1' ? 'player2' : 'player1'); // Change de tour après avoir joué
-            }, 500); // Petit délai pour simuler le temps de réaction
-        } else {
-            // Si elle n'est pas jouable, on change de tour immédiatement
-            setTurn(turn === 'player1' ? 'player2' : 'player1');
+                onPlayCard(drawnCard);
+            }
+            , 500); // Délai de 1 seconde avant de jouer la carte piochée
         }
-    };
+        // Passer au joueur suivant
+        setTurn(turn === 'player1' ? 'player2' : 'player1');
 
+    };
     const onDraw2 = (other) => {
         if (drawCardPile.length < 2) return; // Vérifier qu'il y a au moins 2 cartes à piocher
 
@@ -156,6 +158,12 @@ export const GameProvider: React.FC = ({ children }) => {
 
     const onUno = () => {
         setUnoButtonPressed(true);
+        setShowUnoLogo(true);
+
+        setTimeout(() => {
+            setShowUnoLogo(false);
+            setUnoButtonPressed(false);
+        }, 3000);
     };
 
     const router = useRouter();
@@ -164,21 +172,65 @@ export const GameProvider: React.FC = ({ children }) => {
         router.replace('/'); // Redirige vers la page d'accueil
     };
     useEffect(() => {
-        if (turn === 'player2') {
-            setTimeout(() => {
-                const playableCards = player2Deck.filter(card =>
-                    card.color === currentColor || card.value === currentNumber || card.color === "WILD"
-                );
+        if (turn === "player2") {
+            const botPlay = () => {
+                let keepPlaying = true; // Permet au bot de rejouer s'il le doit
 
-                if (playableCards.length > 0) {
-                    const randomCard = playableCards[Math.floor(Math.random() * playableCards.length)];
-                    onPlayCard(randomCard);
-                } else {
-                    onDrawCard();
-                }
-            }, 1000); // Attendre 1 seconde pour simuler un temps de réflexion
+                const playTurn = () => {
+                    let playableCards = player2Deck.filter(
+                        (card) =>
+                            card.color === currentColor ||
+                            card.value === currentNumber ||
+                            card.color === "WILD"
+                    );
+
+                    if (playableCards.length > 0) {
+                        const chosenCard = playableCards[Math.floor(Math.random() * playableCards.length)];
+                        onPlayCard(chosenCard);
+
+                        // Gestion des cartes spéciales
+                        if (chosenCard.value === "skip" || chosenCard.value === "reverse") {
+                            keepPlaying = true; // Le bot rejoue
+                            setTimeout(playTurn, 1000); // Relance le tour après une pause
+                        } else if (chosenCard.value === "draw") {
+                            onDraw2("player1"); // Le joueur adverse pioche
+                            keepPlaying = true; // Le bot rejoue
+                            setTimeout(playTurn, 1000); // Relance le tour après une pause
+                        } else {
+                            keepPlaying = false; // Tour terminé, passage au joueur
+                            setTimeout(() => setTurn("player1"), 500);
+                        }
+                    } else {
+                        // Le bot pioche une carte et essaie de jouer
+                        onDrawCard();
+                        setTimeout(() => {
+                            playableCards = player2Deck.filter(
+                                (card) =>
+                                    card.color === currentColor ||
+                                    card.value === currentNumber ||
+                                    card.color === "WILD"
+                            );
+
+                            if (playableCards.length > 0) {
+                                const chosenCard = playableCards[Math.floor(Math.random() * playableCards.length)];
+                                onPlayCard(chosenCard);
+                                keepPlaying = false; // Une seule carte après pioche
+                                setTimeout(() => setTurn("player1"), 500); // Passe le tour après avoir joué
+                            } else {
+                                setTimeout(() => setTurn("player1"), 500);
+                            }
+                        }, 1000);
+                        keepPlaying = false; // Après la pioche, on arrête de rejouer
+                    }
+                };
+
+                setTimeout(playTurn, 1000); // Commence le jeu avec un délai initial
+            };
+
+            botPlay(); // Appelle la fonction pour jouer le tour du bot
         }
     }, [turn]);
+
 
     return (
         <GameContext.Provider
@@ -191,6 +243,7 @@ export const GameProvider: React.FC = ({ children }) => {
                 currentNumber,
                 turn,
                 isUnoButtonPressed,
+                showUnoLogo,
                 initializeGame,
                 onPlayCard,
                 onDrawCard,
