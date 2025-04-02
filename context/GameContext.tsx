@@ -15,6 +15,7 @@ interface GameContextType {
     playedCardsPile: Card[];
     drawCardPile: Card[];
     currentColor: string;
+    colorPlayed: string;
     currentNumber: string;
     turn: 'player1' | 'player2';
     isUnoButtonPressed: boolean;
@@ -33,6 +34,7 @@ export const GameProvider: React.FC = ({ children }) => {
     const [playedCardsPile, setPlayedCardsPile] = useState<Card[]>([]);
     const [drawCardPile, setDrawCardPile] = useState<Card[]>([]);
     const [currentColor, setCurrentColor] = useState('');
+    const [colorPlayed, setColorPlayed] = useState('');
     const [currentNumber, setCurrentNumber] = useState('');
     const [turn, setTurn] = useState<'player1' | 'player2'>('player1');
     const [isUnoButtonPressed, setUnoButtonPressed] = useState(false);
@@ -43,7 +45,11 @@ export const GameProvider: React.FC = ({ children }) => {
     useEffect(() => {
         initializeGame();
     }, []);
-
+    useEffect(() => {
+        if (playedCardsPile.length > 0) {
+            console.log('Pile de cartes jouées mise à jour :', playedCardsPile);
+        }
+    }, [playedCardsPile]);
     const initializeGame = () => {
         const allCards = AllCards(); // Récupération de toutes les cartes
         console.log('AllCards:', allCards); // Vérifie si allCards est bien un tableau
@@ -72,16 +78,16 @@ export const GameProvider: React.FC = ({ children }) => {
 
     const onPlayCard = (card: Card) => {
         // Vérifier si la carte peut être jouée (même couleur ou même nombre)
-        if (card.color === currentColor || card.value === currentNumber || card.color === 'wild') {
+        if (card.color === colorPlayed || card.value === currentNumber || card.color === 'wild') {
             if(  card.value === 'reverse') {
                 reverseTurn();
             }
             if (card.color === 'wild') {
                 console.log('Carte Wild jouée, affichage du modal');
+                
                 setPendingWildCard(card); // Stocke la carte en attente
                 setColorPickerVisible(true); // Affiche le modal
-                 // Attend la sélection de couleur
-                 return; // Sort de la fonction pour attendre la sélection de couleur
+                 return;
             }
 
             // Ajouter la carte à la pile de cartes jouées
@@ -89,6 +95,7 @@ export const GameProvider: React.FC = ({ children }) => {
 
             // Mettre à jour la carte actuelle
             setCurrentColor(card.color);
+            setColorPlayed(card.color);
             setCurrentNumber(card.value);
 
             // Enlever la carte du deck du joueur
@@ -109,7 +116,20 @@ export const GameProvider: React.FC = ({ children }) => {
         console.log('🎨 Couleur choisie :', color);
         if (pendingWildCard) {
             setCurrentColor(color);
+           
             setPlayedCardsPile((prev) => [...prev, pendingWildCard]);
+
+                // Mettre à jour la carte actuelle
+                setColorPlayed(color);
+                setCurrentColor(pendingWildCard.color);
+                setCurrentNumber(pendingWildCard.value);
+    
+                // Enlever la carte du deck du joueur
+                if (turn === 'player1') {
+                    setPlayer1Deck((prev) => prev.filter((item) => item.color !==pendingWildCard.color || item.value !== pendingWildCard.value));
+                } else {
+                    setPlayer2Deck((prev) => prev.filter((item) => item.color !== pendingWildCard.color || item.value !== pendingWildCard.value));
+                }
             setPendingWildCard(null);
             setColorPickerVisible(false);
             setTurn(turn === 'player1' ? 'player2' : 'player1');
