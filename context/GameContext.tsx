@@ -79,6 +79,7 @@ export const GameProvider: React.FC = ({ children }) => {
     };
 
     const onPlayCard = (card: Card) => {
+        console.log("dans ce tour c'est au joueur" + turn + "de jouer ")
         // Vérifier si la carte peut être jouée
         if (card.color === currentColor || card.value === currentNumber || card.color === "WILD") {
 
@@ -113,6 +114,7 @@ export const GameProvider: React.FC = ({ children }) => {
                 setTurn(turn === 'player1' ? 'player2' : 'player1');
             }
         }
+        console.log(turn)
     };
 
     const onDrawCard = () => {
@@ -139,6 +141,7 @@ export const GameProvider: React.FC = ({ children }) => {
         }
         // Passer au joueur suivant
         setTurn(turn === 'player1' ? 'player2' : 'player1');
+        console.log(turn)
 
     };
     const onDraw2 = (other) => {
@@ -171,8 +174,10 @@ export const GameProvider: React.FC = ({ children }) => {
     const handleAbandonGame = () => {
         router.replace('/'); // Redirige vers la page d'accueil
     };
+
     useEffect(() => {
         if (turn === "player2") {
+            console.log("BOTT")
             const botPlay = () => {
                 let keepPlaying = true; // Permet au bot de rejouer s'il le doit
 

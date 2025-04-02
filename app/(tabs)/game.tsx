@@ -1,10 +1,11 @@
 import React, { useEffect, useRef } from 'react';
-import { View, Text, Button, StyleSheet, ScrollView, Image, Animated } from 'react-native';
+import { View, Text, Button, StyleSheet, ScrollView, Image, Animated,TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import Card from './../../components/uno/Card';
 import { useGameContext } from '@/context/GameContext';
-import Card from './../../components/uno/Card';
 import { Modal } from 'react-native';
+import { FontAwesome5 } from '@expo/vector-icons';
+
 
 
 
@@ -25,6 +26,7 @@ export default function GameScreen() {
     onUno,
     handleAbandonGame,
   } = useGameContext();
+
 
   const [isModalVisible, setIsModalVisible] = React.useState(false);
 
@@ -174,7 +176,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   pioche: {
-
+    padding: 10,
   },
   piocheGlow: {
     shadowColor: '#ffffff',
