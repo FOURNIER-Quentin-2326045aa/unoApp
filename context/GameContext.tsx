@@ -45,11 +45,7 @@ export const GameProvider: React.FC = ({ children }) => {
     useEffect(() => {
         initializeGame();
     }, []);
-    useEffect(() => {
-        if (playedCardsPile.length > 0) {
-            console.log('Pile de cartes jouées mise à jour :', playedCardsPile);
-        }
-    }, [playedCardsPile]);
+  
     const initializeGame = () => {
         const allCards = AllCards(); // Récupération de toutes les cartes
         console.log('AllCards:', allCards); // Vérifie si allCards est bien un tableau
@@ -185,7 +181,8 @@ export const GameProvider: React.FC = ({ children }) => {
                 onPlayCard,
                 onDrawCard,
                 onUno,
-                handleAbandonGame,handlePlayCard
+                handleAbandonGame,applyColorChoice,
+                handlePlayCard
                 
             }}
         >
