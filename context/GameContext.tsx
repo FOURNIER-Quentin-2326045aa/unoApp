@@ -1,5 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { AllCards } from '@/constants/AllCards';
+
+
 import ColorPickerModal from '../modals/ColorPickerModal';
 
 
@@ -47,7 +49,7 @@ export const GameProvider: React.FC = ({ children }) => {
     useEffect(() => {
         initializeGame();
     }, []);
-
+  
     const initializeGame = () => {
         const allCards = AllCards(); // Récupération de toutes les cartes
         console.log('AllCards:', allCards); // Vérifie si allCards est bien un tableau
@@ -98,11 +100,10 @@ export const GameProvider: React.FC = ({ children }) => {
             // Mettre à jour la pile de cartes jouées
             setPlayedCardsPile((prev) => [...prev, card]);
 
-            // Mettre à jour la couleur et le nombre actuels
+            // Mettre à jour la carte actuelle
             setCurrentColor(card.color);
             setColorPlayed(card.color);
             setCurrentNumber(card.value);
-
 
             // Enlever la carte du deck du joueur
             if (turn === 'player1') {
@@ -131,6 +132,33 @@ export const GameProvider: React.FC = ({ children }) => {
             }
         }
     };
+    const reverseTurn = () => {
+        setTurn(turn === 'player1' ? 'player2' : 'player1');
+    }
+    const applyColorChoice = (color: string) => {
+        console.log('🎨 Couleur choisie :', color);
+        if (pendingWildCard) {
+            setCurrentColor(color);
+           
+            setPlayedCardsPile((prev) => [...prev, pendingWildCard]);
+
+                // Mettre à jour la carte actuelle
+                setColorPlayed(color);
+                setCurrentColor(pendingWildCard.color);
+                setCurrentNumber(pendingWildCard.value);
+    
+                // Enlever la carte du deck du joueur
+                if (turn === 'player1') {
+                    setPlayer1Deck((prev) => prev.filter((item) => item.color !==pendingWildCard.color || item.value !== pendingWildCard.value));
+                } else {
+                    setPlayer2Deck((prev) => prev.filter((item) => item.color !== pendingWildCard.color || item.value !== pendingWildCard.value));
+                }
+            setPendingWildCard(null);
+            setColorPickerVisible(false);
+            setTurn(turn === 'player1' ? 'player2' : 'player1');
+        }
+    };
+
 
     const onDrawCard = () => {
         if (drawCardPile.length === 0) return;
@@ -216,7 +244,6 @@ export const GameProvider: React.FC = ({ children }) => {
             setUnoButtonPressed(false);
         }, 3000);
     };
-    
 
     const handleAbandonGame = () => {
         // Logique pour abandonner le jeu (peut-être rediriger vers un autre écran)
@@ -282,7 +309,7 @@ export const GameProvider: React.FC = ({ children }) => {
             botPlay(); // Appelle la fonction pour jouer le tour du bot
         }
     }, [turn]);
-    
+      
 
     return (
         <GameContext.Provider
