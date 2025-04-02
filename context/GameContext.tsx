@@ -23,11 +23,13 @@ interface GameContextType {
     turn: 'player1' | 'player2';
     isUnoButtonPressed: boolean;
     showUnoLogo: boolean;
+    isUnoForgotten: boolean;  // Ajout de cet état
     initializeGame: () => void;
     onPlayCard: (card: Card) => void;
     onDrawCard: () => void;
     onUno: () => void;
     handleAbandonGame: () => void;
+    handleIsUnoForgotten: (value: boolean) => void;  // Méthode pour changer l'état de isUnoForgotten
 }
 
 const GameContext = createContext<GameContextType>({} as GameContextType);
@@ -45,6 +47,7 @@ export const GameProvider: React.FC = ({ children }) => {
     const [showUnoLogo, setShowUnoLogo] = useState(false);
     const [isColorPickerVisible, setColorPickerVisible] = useState(false);
     const [pendingWildCard, setPendingWildCard] = useState<Card | null>(null);
+    const [isUnoForgotten, setIsUnoForgotten] = useState(false);  // Ajout de l'état isUnoForgotten
 
 
     useEffect(() => {
@@ -85,6 +88,7 @@ export const GameProvider: React.FC = ({ children }) => {
         setCurrentColor(tableCard.color);
         setColorPlayed(tableCard.color);
         setCurrentNumber(tableCard.value);
+        console.log(turn)
     };
 
     const onPlayCard = (card: Card) => {
@@ -205,45 +209,50 @@ export const GameProvider: React.FC = ({ children }) => {
         setDrawCardPile((prev) => prev.slice(2));
     };
 
-    const applyColorChoice = (color: string) => {
-        console.log('🎨 Couleur choisie :', color);
-        if (pendingWildCard) {
-
-            setPlayedCardsPile((prev) => [...prev, pendingWildCard]);
-
-                // Mettre à jour la carte actuelle
-                setColorPlayed(color);
-                setCurrentColor(pendingWildCard.color);
-                setCurrentNumber(pendingWildCard.value);
-
-                // Enlever la carte du deck du joueur
-                if (turn === 'player1') {
-                    setPlayer1Deck((prev) => prev.filter((item) => item.color !==pendingWildCard.color || item.value !== pendingWildCard.value));
-                } else {
-                    setPlayer2Deck((prev) => prev.filter((item) => item.color !== pendingWildCard.color || item.value !== pendingWildCard.value));
-                }
-            setPendingWildCard(null);
-            setColorPickerVisible(false);
-            setTurn(turn === 'player1' ? 'player2' : 'player1');
-        }
-    };
     const handlePlayCard = (card) => {
         console.log('Carte jouée:', card);
         if (card.value === 'draw' && card.color === 'wild') {
           console.log('Affichage du modal');
-          setModalVisible(true);
         }
       };
 
 
     const onUno = () => {
+        if (turn === 'player1' && player1Deck.length === 1 && !isUnoButtonPressed) {
+            setShowUnoLogo(true);
+            setTimeout(() => {
+                setShowUnoLogo(false);
+                setUnoButtonPressed(false);
+                handleIsUnoForgotten(true);  // Gérer l'oubli de dire UNO
+            }, 3000);
+        } else if (turn === 'player2' && player2Deck.length === 1 && !isUnoButtonPressed) {
+            setShowUnoLogo(true);
+            setTimeout(() => {
+                setShowUnoLogo(false);
+                setUnoButtonPressed(false);
+                handleIsUnoForgotten(true);  // Gérer l'oubli de dire UNO
+            }, 3000);
+        }
         setUnoButtonPressed(true);
-        setShowUnoLogo(true);
+    };
 
-        setTimeout(() => {
-            setShowUnoLogo(false);
-            setUnoButtonPressed(false);
-        }, 3000);
+    const handleIsUnoForgotten = (value: boolean) => {
+        setIsUnoForgotten(value);
+    };
+
+
+    const checkWinCondition = () => {
+        if (player1Deck.length === 0) {
+            winGame('player1');
+        } else if (player2Deck.length === 0) {
+            winGame('player2');
+        }
+    };
+
+    const winGame = (winner: 'player1' | 'player2' | 'bot') => {
+        alert(`${winner} a gagné !`);
+        // Ajouter une logique pour gérer la victoire, réinitialiser le jeu, etc.
+        router.replace('/'); // Redirige vers la page d'accueil
     };
 
     const router = useRouter();
@@ -318,6 +327,7 @@ export const GameProvider: React.FC = ({ children }) => {
     return (
         <GameContext.Provider
             value={{
+                colorPlayed,
                 player1Deck,
                 player2Deck,
                 playedCardsPile,
@@ -327,12 +337,13 @@ export const GameProvider: React.FC = ({ children }) => {
                 turn,
                 isUnoButtonPressed,
                 showUnoLogo,
+                isUnoForgotten,  // Fournir l'état isUnoForgotten
                 initializeGame,
                 onPlayCard,
                 onDrawCard,
                 onUno,
                 handleAbandonGame,
-                handlePlayCard,
+                handleIsUnoForgotten  // Fournir la méthode
             }}
         >
             <ColorPickerModal visible={isColorPickerVisible} onSelectColor={applyColorChoice} />

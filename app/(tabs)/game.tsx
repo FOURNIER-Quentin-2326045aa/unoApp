@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import { View, Text, Button, StyleSheet, ScrollView, Image, Animated,TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import Card from './../../components/uno/Card';
@@ -21,14 +21,47 @@ export default function GameScreen() {
     turn,
     isUnoButtonPressed,
     showUnoLogo,
+    isUnoForgotten,
     onPlayCard,
     onDrawCard,
     onUno,
     handleAbandonGame,
+    handleIsUnoForgotten
   } = useGameContext();
 
-
   const [isModalVisible, setIsModalVisible] = React.useState(false);
+  const [winner, setWinner] = useState('');
+  const [isDeckInitialized, setIsDeckInitialized] = useState(false);
+
+  const scale = useRef(new Animated.Value(1)).current;
+
+  // Vérification que les decks sont initialisés
+  useEffect(() => {
+    if (player1Deck.length > 0 && player2Deck.length > 0) {
+      setIsDeckInitialized(true); // Les decks sont maintenant initialisés
+    }
+  }, [player1Deck, player2Deck]);
+
+  useEffect(() => {
+    if (isDeckInitialized) {  // Seulement si les decks sont initialisés
+      if (player1Deck.length === 0) {
+        setWinner('Player');
+      } else if (player2Deck.length === 0) {
+        setWinner('Bot');
+      }
+    }
+  }, [player1Deck.length, player2Deck.length, isDeckInitialized]); // Déclenche seulement après l'initialisation des decks
+
+  useEffect(() => {
+    if (showUnoLogo) {
+      Animated.sequence([
+        Animated.timing(scale, { toValue: 2, duration: 1000, useNativeDriver: true }),
+        Animated.timing(scale, { toValue: 0, duration: 1000, useNativeDriver: true }),
+      ]).start();
+    } else {
+      scale.setValue(1);
+    }
+  }, [showUnoLogo, scale]);
 
   const canDraw = turn === 'player1' && drawCardPile.length > 0;
 
@@ -37,30 +70,6 @@ export default function GameScreen() {
     setIsModalVisible(true);
   };
 
-
-
-  // Animation pour le logo UNO
-  const scale = useRef(new Animated.Value(1)).current;
-
-  // Animation pour le logo UNO (oui je sais c'est moche)
-  useEffect(() => {
-    if (showUnoLogo) {
-      Animated.sequence([
-        Animated.timing(scale, {
-          toValue: 2, // Agrandir
-          duration: 1000, // Durée de l'agrandissement
-          useNativeDriver: true,
-        }),
-        Animated.timing(scale, {
-          toValue: 0, // Rétrécir jusqu'à disparaître
-          duration: 1000, // Durée du rétrécissement
-          useNativeDriver: true,
-        }),
-      ]).start();
-    } else {
-      scale.setValue(1);
-    }
-  }, [showUnoLogo, scale]);
 
   return (
       <View style={styles.container}>
@@ -109,6 +118,7 @@ export default function GameScreen() {
             <Text style={styles.buttonText}>UNO</Text>
           </TouchableOpacity>
         </View>
+
           {/* Affichage de l'image du logo UNO si le bouton est pressé */}
           {showUnoLogo && (
               <View style={styles.unoLogoContainer}>
@@ -118,6 +128,47 @@ export default function GameScreen() {
                       resizeMode="contain"
                   />
               </View> )}
+
+        {/* UNO Forgotten Pop-up */}
+        {isUnoForgotten && (
+            <Modal
+                animationType="slide"
+                transparent={true}
+                visible={isUnoForgotten}
+                onRequestClose={() => handleIsUnoForgotten(false)}
+            >
+              <View style={styles.modalContainer}>
+                <View style={styles.modalContent}>
+                  <Text style={styles.modalText}>Vous avez oublié de dire UNO !</Text>
+                  <TouchableOpacity onPress={() => handleIsUnoForgotten(false)} style={styles.confirmButton}>
+                    <Text style={styles.buttonText}>OK</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </Modal>
+        )}
+
+        {/* End game pop-up */}
+        {winner && (
+            <Modal
+                animationType="slide"
+                transparent={true}
+                visible={true}
+                onRequestClose={() => setIsModalVisible(false)}
+            >
+              <View style={styles.modalContainer}>
+                <View style={styles.modalContent}>
+                  <Text style={styles.modalText}>
+                    {winner === 'Player' ? 'Bravo! Vous avez gagné!' : 'Dommage, vous avez perdu!'}
+                  </Text>
+                  <TouchableOpacity onPress={handleAbandonGame} style={styles.confirmButton}>
+                    <Text style={styles.buttonText}>Retourner à l\'accueil</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </Modal>
+        )}
+
         <Modal
             animationType="slide"
             transparent={true}
