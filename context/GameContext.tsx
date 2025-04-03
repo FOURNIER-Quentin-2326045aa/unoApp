@@ -92,16 +92,35 @@ export const GameProvider: React.FC = ({ children }) => {
     };
 
     const onPlayCard = (card: Card) => {
-        console.log("dans ce tour c'est au joueur" + turn + "de jouer ")
+
         // Vérifier si la carte peut être jouée
+        console.log('cest le tour de', turn,'qui joue la carte', card);
+        console.log('deck1 joué',player1Deck);
+        console.log('deck2',player2Deck)
+        //Vérification UNO : si le joueur a une seule carte et n'a pas appuyé sur le bouton "UNO", il prend +2
+
+
         if (card.color ===  colorPlayed || card.value === currentNumber || card.color === "wild") {
-            console.log('Carte jouée:', card);
+
             if (card.color === 'wild') {
-                console.log('Carte Wild jouée, affichage du modal');
+                if(card.value === 'draw') {
+                    console.log('Carte Wild +4 jouée par' ,turn);
+                    onDraw(turn === 'player1' ? 'player2' : 'player1',4);
+                    console.log('deck modifié',player1Deck);
+                    console.log('deck modifié',player2Deck);
+
+                }
+                if(turn === "player2"){
+                    setPendingWildCard(card); // Stocke la carte en attente
+                    return;
+                }
+
+                console.log('Carte Wild jouée par',turn,' affichage du modal');
 
                 setPendingWildCard(card); // Stocke la carte en attente
                 setColorPickerVisible(true); // Affiche le modal
-                 return;
+                return;
+
             }
             // Mettre à jour la pile de cartes jouées
             setPlayedCardsPile((prev) => [...prev, card]);
@@ -123,47 +142,58 @@ export const GameProvider: React.FC = ({ children }) => {
             // Gestion des cartes spéciales
 
 
-            if (card.value === "draw") {
+            if (card.value === "draw" && card.color !== "wild") {
                 // +2 : L'autre joueur pioche et le tour ne change pas
-                const nextPlayer = turn === 'player1' ? 'player2' : 'player1';
-                onDraw2(nextPlayer);
-            } else if (card.value === "skip") {
-                // Skip : Le joueur garde son tour pour enchaîner un autre coup
+                const nextPlayer = turn == 'player1' ? 'player2' : 'player1';
+                console.log('Carte +2 jouéepar',turn,' ', nextPlayer, 'pioche 2 cartes');
+                onDraw(nextPlayer,2);
+                setTurn(nextPlayer);
+            }  else if (card.value == "skip") {
+                // Skip : Le joueur garde son tour
                 setTurn(turn);
-            } else if (card.value === "reverse") {
-                // Reverse dans un jeu à 2 joueurs agit comme un Skip
+                console.log('Carte Skip jouée,', turn, 'garde son tour');
+                // Si c'est le bot, planifier une autre action
+
+            } else if (card.value == "reverse") {
+                // Reverse agit comme un Skip en 2 joueurs
                 setTurn(turn);
+                console.log('Carte Reverse jouée,', turn, 'garde son tour');
+                // Si c'est le bot, planifier une autre action
+
             } else {
                 // Sinon, passer au joueur suivant
-                setTurn(turn === 'player1' ? 'player2' : 'player1');
+
+                setTurn(turn == 'player1' ? 'player2' : 'player1');
+                console.log('Carte jouée, passage au joueur suivant',turn);
             }
         }
     };
-    const reverseTurn = () => {
-        setTurn(turn === 'player1' ? 'player2' : 'player1');
-    }
+
     const applyColorChoice = (color: string) => {
         console.log('🎨 Couleur choisie :', color);
         if (pendingWildCard) {
+            console.log('Carte en attente:', pendingWildCard);
             setCurrentColor(color);
-
+           console.log('couleur mis a jour',color);
             setPlayedCardsPile((prev) => [...prev, pendingWildCard]);
 
-                // Mettre à jour la carte actuelle
-                setColorPlayed(color);
-                setCurrentColor(pendingWildCard.color);
-                setCurrentNumber(pendingWildCard.value);
+            // Mettre à jour la carte actuelle
+            setColorPlayed(color);
+            setCurrentColor(pendingWildCard.color);
+            setCurrentNumber(pendingWildCard.value);
 
                 // Enlever la carte du deck du joueur
-                if (turn === 'player1') {
-                    setPlayer1Deck((prev) => prev.filter((item) => item.color !==pendingWildCard.color || item.value !== pendingWildCard.value));
-                } else {
-                    setPlayer2Deck((prev) => prev.filter((item) => item.color !== pendingWildCard.color || item.value !== pendingWildCard.value));
-                }
+            if (turn === 'player1') {
+            setPlayer1Deck((prev) => prev.filter((item) => item.color !==pendingWildCard.color || item.value !== pendingWildCard.value));
+            } else {
+                setPlayer2Deck((prev) => prev.filter((item) => item.color !== pendingWildCard.color || item.value !== pendingWildCard.value));
+            }
+
             setPendingWildCard(null);
             setColorPickerVisible(false);
             setTurn(turn === 'player1' ? 'player2' : 'player1');
         }
+        return;
     };
 
 
@@ -181,22 +211,26 @@ export const GameProvider: React.FC = ({ children }) => {
 
         // Mettre à jour la pioche
         setDrawCardPile((prev) => prev.slice(1));
-        
+
         // Si on peut jouer la carte piochée, on la joue automatiquement après 1 seconde
-        if (drawnCard.color === colorPlayed || drawnCard.value === currentNumber || drawnCard.color === "WILD") {
+        if (drawnCard.color === colorPlayed || drawnCard.value === currentNumber || drawnCard.color === "wild") {
             setTimeout(() => {
                 onPlayCard(drawnCard);
             }
             , 500); // Délai de 1 seconde avant de jouer la carte piochée
+        }else {
+            // Passer au joueur suivant
+            setTurn(turn === 'player1' ? 'player2' : 'player1');
         }
-        // Passer au joueur suivant
-        setTurn(turn === 'player1' ? 'player2' : 'player1');
 
     };
-    const onDraw2 = (other) => {
-        if (drawCardPile.length < 2) return; // Vérifier qu'il y a au moins 2 cartes à piocher
 
-        const drawnCards = drawCardPile.slice(0, 2).map(card => ({ ...card, visible: true }));
+    const onDraw = (other: 'player1' | 'player2',count: number) => {
+        console.log('Pioche de', count, 'cartes pour', other);
+        if (drawCardPile.length < count) return; // Vérifier qu'il y a au moins 2 cartes à piocher
+
+        // On prend les 2 premières cartes et on les rend visibles
+        const drawnCards = drawCardPile.slice(0, count).map(card => ({ ...card, visible: true }));
 
         // Ajouter les cartes piochées au deck du joueur concerné
         if (other === 'player1') {
@@ -206,8 +240,10 @@ export const GameProvider: React.FC = ({ children }) => {
         }
 
         // Mettre à jour la pioche en enlevant les cartes piochées
-        setDrawCardPile((prev) => prev.slice(2));
+        setDrawCardPile((prev) => prev.slice(count));
     };
+
+
 
     const handlePlayCard = (card) => {
         console.log('Carte jouée:', card);
@@ -218,42 +254,36 @@ export const GameProvider: React.FC = ({ children }) => {
 
 
     const onUno = () => {
-        if (turn === 'player1' && player1Deck.length === 1 && !isUnoButtonPressed) {
+            setUnoButtonPressed(true);
             setShowUnoLogo(true);
+
             setTimeout(() => {
                 setShowUnoLogo(false);
                 setUnoButtonPressed(false);
-                handleIsUnoForgotten(true);  // Gérer l'oubli de dire UNO
             }, 3000);
-        } else if (turn === 'player2' && player2Deck.length === 1 && !isUnoButtonPressed) {
-            setShowUnoLogo(true);
-            setTimeout(() => {
-                setShowUnoLogo(false);
-                setUnoButtonPressed(false);
-                handleIsUnoForgotten(true);  // Gérer l'oubli de dire UNO
-            }, 3000);
-        }
-        setUnoButtonPressed(true);
+
     };
+
+
 
     const handleIsUnoForgotten = (value: boolean) => {
         setIsUnoForgotten(value);
     };
 
 
-    const checkWinCondition = () => {
-        if (player1Deck.length === 0) {
-            winGame('player1');
-        } else if (player2Deck.length === 0) {
-            winGame('player2');
+    const checkWin = () => {
+        if (player1Deck.length === 0 && handleIsUnoForgotten(true)) {
+            console.log(turn, "n'a pas dit UNO ! Il pioche +2 cartes.");
+            onDraw(turn, 2);
         }
+        if (player1Deck.length === 0) return 'Player';
+        if (player2Deck.length === 0) return 'Bot';
+
+        return null;
     };
 
-    const winGame = (winner: 'player1' | 'player2' | 'bot') => {
-        alert(`${winner} a gagné !`);
-        // Ajouter une logique pour gérer la victoire, réinitialiser le jeu, etc.
-        router.replace('/'); // Redirige vers la page d'accueil
-    };
+
+
 
     const router = useRouter();
 
@@ -262,65 +292,112 @@ export const GameProvider: React.FC = ({ children }) => {
     };
 
     useEffect(() => {
-        if (turn === "player2") {
-            console.log("BOTT")
-            const botPlay = () => {
-                let keepPlaying = true; // Permet au bot de rejouer s'il le doit
+        // Surveille les changements de pendingWildCard
+        if (pendingWildCard) {
+            // Logique qui attend que la carte soit choisie avant de passer au bot (si nécessaire)
+            console.log('Carte wild en attente:', pendingWildCard);
+            // Si le tour est celui du bot, choisir la couleur automatiquement après un délai pour imiter l'attente
+            console.log('Tour actuel:', turn);
+            if (turn === 'player2') {
+                console.log("Sélection de la couleur en cours...");
+                const wildColors = ["red", "blue", "yellow", "green"];
+                const chosenColor = wildColors[Math.floor(Math.random() * wildColors.length)];
+                console.log("Le bot a choisi la couleur", chosenColor);
 
-                const playTurn = () => {
-                    let playableCards = player2Deck.filter(
+                // Applique la couleur choisie automatiquement
+                applyColorChoice(chosenColor);
+            }
+        }
+    }, [pendingWildCard]);
+
+    useEffect(() => {
+        if (turn === "player2") {
+            botPlay(); // Appelle la fonction pour jouer le tour du bot
+
+        }
+    }, [turn]);
+
+    const botPlay = () => {
+        const playTurn = () => {
+            let playableCards = player2Deck.filter(
+                (card) =>
+                    card.color === colorPlayed ||
+                    card.value === currentNumber ||
+                    card.color === "wild"
+            );
+
+            if (playableCards.length > 0) {
+                const chosenCard = playableCards[Math.floor(Math.random() * playableCards.length)];
+
+                console.log('Carte jouée par le bot:', chosenCard);
+
+                // Jouer la carte
+                onPlayCard(chosenCard);
+
+                // Vérification spéciale pour skip/reverse
+                if (chosenCard.value === "reverse" || chosenCard.value === "skip") {
+                    console.log('Carte spéciale jouée, le bot rejoue');
+
+                    // Mise à jour immédiate du deck
+                    setPlayer2Deck((prev) => prev.filter((item) => item.color !== chosenCard.color || item.value !== chosenCard.value));
+
+                    // Attendre un peu et vérifier si le bot peut encore jouer
+                    setTimeout(() => {
+                        playableCards = player2Deck.filter(
+                            (card) =>
+                                card.color === colorPlayed ||
+                                card.value === currentNumber ||
+                                card.color === "wild"
+                        );
+
+                        if (playableCards.length > 1 ) {
+                            console.log("Le bot peut rejouer une autre carte.");
+                            botPlay(); // Le bot continue son tour
+                        } else {
+                            console.log("Le bot n'a plus de carte jouable après skip/reverse, il pioche.");
+                            onDrawCard(); // Forcer la pioche
+                        }
+                    }, 500); // Petit délai pour attendre la mise à jour
+                }
+            } else {
+                console.log('Aucune carte jouable, le bot pioche une carte');
+                onDrawCard();
+
+                setTimeout(() => {
+                    playableCards = player2Deck.filter(
                         (card) =>
                             card.color === colorPlayed ||
                             card.value === currentNumber ||
-                            card.color === "WILD"
+                            card.color === "wild"
                     );
-    
+
                     if (playableCards.length > 0) {
+                        console.log('Carte jouable après pioche:', playableCards);
                         const chosenCard = playableCards[Math.floor(Math.random() * playableCards.length)];
                         onPlayCard(chosenCard);
-    
-                        // Gestion des cartes spéciales
-                        if (chosenCard.value === "skip" || chosenCard.value === "reverse") {
-                            keepPlaying = true; // Le bot rejoue
-                            setTimeout(playTurn, 1000); // Relance le tour après une pause
-                        } else if (chosenCard.value === "draw") {
-                            onDraw2("player1"); // Le joueur adverse pioche
-                            keepPlaying = true; // Le bot rejoue
-                            setTimeout(playTurn, 1000); // Relance le tour après une pause
-                        } else {
-                            keepPlaying = false; // Tour terminé, passage au joueur
-                            setTimeout(() => setTurn("player1"), 500);
+
+                        // Vérifier si la carte jouée est une carte spéciale
+                        if (chosenCard.value === "reverse" || chosenCard.value === "skip") {
+                            console.log('Carte spéciale jouée après pioche, le bot rejoue');
+                            botPlay();
+                        } else if (chosenCard.color === "wild") {
+                            const wildColors = ["red", "blue", "yellow", "green"];
+                            const chosenColor = wildColors[Math.floor(Math.random() * wildColors.length)];
+                            console.log("Le bot a choisi la couleur", chosenColor);
+                            applyColorChoice(chosenColor);
+                            setTurn("player1");
                         }
                     } else {
-                        // Le bot pioche une carte et essaie de jouer
-                        onDrawCard();
-                        setTimeout(() => {
-                            playableCards = player2Deck.filter(
-                                (card) =>
-                                    card.color === colorPlayed ||
-                                    card.value === currentNumber ||
-                                    card.color === "WILD"
-                            );
-
-                            if (playableCards.length > 0) {
-                                const chosenCard = playableCards[Math.floor(Math.random() * playableCards.length)];
-                                onPlayCard(chosenCard);
-                                keepPlaying = false; // Une seule carte après pioche
-                                setTimeout(() => setTurn("player1"), 500); // Passe le tour après avoir joué
-                            } else {
-                                setTimeout(() => setTurn("player1"), 500);
-                            }
-                        }, 1000);
-                        keepPlaying = false; // Après la pioche, on arrête de rejouer
+                        console.log('Aucune carte jouable après pioche, le tour est passé au joueur 1');
+                        setTimeout(() => setTurn("player1"), 2000);
                     }
-                };
-    
-                setTimeout(playTurn, 1000); // Commence le jeu avec un délai initial
-            };
-    
-            botPlay(); // Appelle la fonction pour jouer le tour du bot
-        }
-    }, [turn]);
+                }, 1000);
+            }
+        };
+
+        setTimeout(playTurn, 2000);
+    };
+
 
 
 
@@ -343,7 +420,8 @@ export const GameProvider: React.FC = ({ children }) => {
                 onDrawCard,
                 onUno,
                 handleAbandonGame,
-                handleIsUnoForgotten  // Fournir la méthode
+                handleIsUnoForgotten,  // Fournir la méthode
+                checkWin
             }}
         >
             <ColorPickerModal visible={isColorPickerVisible} onSelectColor={applyColorChoice} />

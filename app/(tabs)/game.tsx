@@ -26,7 +26,8 @@ export default function GameScreen() {
     onDrawCard,
     onUno,
     handleAbandonGame,
-    handleIsUnoForgotten
+    handleIsUnoForgotten,
+    checkWin
   } = useGameContext();
 
   const [isModalVisible, setIsModalVisible] = React.useState(false);
@@ -43,14 +44,11 @@ export default function GameScreen() {
   }, [player1Deck, player2Deck]);
 
   useEffect(() => {
-    if (isDeckInitialized) {  // Seulement si les decks sont initialisés
-      if (player1Deck.length === 0) {
-        setWinner('Player');
-      } else if (player2Deck.length === 0) {
-        setWinner('Bot');
-      }
+    if (isDeckInitialized) {  // Attendre que les decks soient bien initialisés
+      const result = checkWin();
+      if (result) setWinner(result);
     }
-  }, [player1Deck.length, player2Deck.length, isDeckInitialized]); // Déclenche seulement après l'initialisation des decks
+  }, [player1Deck, player2Deck, isUnoButtonPressed, isDeckInitialized]);
 
   useEffect(() => {
     if (showUnoLogo) {
